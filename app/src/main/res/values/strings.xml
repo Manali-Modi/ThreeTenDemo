@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">ThreeTenDemo</string>
+    <string name="show_utc_time">Show Current UTC Time</string>
+    <string name="show_zone_time">Show Current Zone Time</string>
+    <string name="btn_local">Show Local Date Time</string>
+    <string name="utc_to_zone">Convert UTC to Zone</string>
+    <string name="zone_to_utc">Convert Zone To UTC</string>
+    <string name="string_to_local">Convert String to Local</string>
+    <string name="local_to_string">Convert Local to String</string>
+    <string name="diff_formats">Conversion from one to another format</string>
+</resources>
