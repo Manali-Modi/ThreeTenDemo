@@ -193,6 +193,5 @@ public class MainActivity extends AppCompatActivity {
 
         GregorianCalendar gc = DateTimeUtils.toGregorianCalendar(ZonedDateTime.now());
         mainBinding.txtDateTime.append("\nZonedDateTime -> GregorianCalendar: " + gc);
-
     }
 }
