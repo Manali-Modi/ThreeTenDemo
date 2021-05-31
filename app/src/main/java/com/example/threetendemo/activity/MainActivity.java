@@ -24,10 +24,11 @@ import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.ZonedDateTime;
 import org.threeten.bp.chrono.Chronology;
 import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.temporal.TemporalAccessor;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
@@ -35,6 +36,8 @@ import androidx.databinding.DataBindingUtil;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "DateTime";
+    private static final String TAG_LIST = "localDateList";
+    private static final String TAG_DIFF = "Difference";
     private ActivityMainBinding mainBinding;
 
     @Override
@@ -45,21 +48,131 @@ public class MainActivity extends AppCompatActivity {
         mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
 
         basicClasses();
-        convertUTCToZone();
-        convertZoneToUTC(); //has internal conversion Zone->Local & Local->Zone
-        convertStringToLocalOrZone();
-        convertLocalToString();
-        getSeparateFields();
+        convertUTCToZone(Instant.now(), ZoneId.of("Asia/Kolkata"));
+        convertZoneToUTC(ZonedDateTime.now()); //has internal conversion Zone->Local & Local->Zone
+        convertStringToLocalOrZone("27/05/2021 03:30 PM");
+        convertLocalToString(LocalDateTime.now());
+        getSeparateFields("2021-05-27T16:05:15.598+05:30[Asia/Kolkata]");
         inputDateWithZoneId();
         inputDateWithZoneOffset();
         inputDateTimeWithFractionOrNot();
         inputDateTimeOtherFormats(); //Not Standard
-        inputDateInMillis();
+        inputDateInMillis(1569494827);
+
+        List<LocalDate> localDateList = getListOfDatesBetweenTwoDate("2021-04-22", "2021-05-05");
+        Log.d(TAG_LIST, localDateList.toString());
+
+        List<LocalDate> localDateList1 = getListOfDatesBetweenTwoDateInMillis(1614882600000L, 1615573800000L); //start - 2021-03-05; end - 2021-03-13
+        Log.d(TAG_LIST, localDateList1.toString());
+
+        List<String> localDateList2 = getListOfDatesBetweenTwoDateInString("30/12/2020", "09/01/2021");
+        Log.d(TAG_LIST, localDateList2.toString());
+
+        long daysBetween = getTotalDaysBetweenTwoDate("2021-01-01", "2021-02-01");
+        Log.d(TAG_DIFF, String.valueOf(daysBetween));
+
+        String durationOfTime = getTotalTimeInHourMin("23/03/2021 05:20", "26/03/2021 16:15");
+        Log.d(TAG_DIFF, durationOfTime);
+
+        String duration = getTotalTimeInDayHourMin("23/03/2021 05:20", "26/03/2021 16:15");
+        Log.d(TAG_DIFF, duration);
+
+        String differenceFromToday = getDifferenceFromToday("23/05/2021 20:20");
+        Log.d(TAG_DIFF, differenceFromToday);
+
+        long differenceFromToday1 = getDifferenceFromToday(LocalDate.parse("2021-05-15"));
+        Log.d(TAG_DIFF, String.valueOf(differenceFromToday1));
+
+        String differenceFromToday2 = getDifferenceFromToday("01/01/2021 12:00 AM", DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a"), DateTimeFormatter.ofPattern("dd MMM, yy HH:mm"));
+        Log.d(TAG_DIFF, differenceFromToday2);
+
     }
 
-    private void inputDateInMillis() {
+    private String getDifferenceFromToday(String date, DateTimeFormatter inputFormat, DateTimeFormatter outputFormat) {
+        LocalDateTime local = LocalDateTime.parse(date, inputFormat);
+        LocalDateTime today = LocalDateTime.now();
+        long days = Duration.between(local, today).toDays();
+        String outputDate = local.format(outputFormat);
+        return days + " days from today" + "\nDate: " + outputDate;
+    }
+
+    private long getDifferenceFromToday(LocalDate startLocalDate) {
+        LocalDate endLocalDate = LocalDate.now();
+        return Duration.between(startLocalDate.atStartOfDay(), endLocalDate.atStartOfDay()).toDays();
+    }
+
+    private String getDifferenceFromToday(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime start = LocalDateTime.parse(date, formatter);
+        LocalDateTime end = LocalDateTime.now();
+        long days = Duration.between(start, end).toDays();
+        String d1 = start.format(DateTimeFormatter.ofPattern("EEEE dd MMM, yyyy"));
+        return "Date: " + d1 + "\nDifference: " + days + " days from today";
+    }
+
+    private String getTotalTimeInDayHourMin(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime start = LocalDateTime.parse(startDate, formatter);
+        LocalDateTime end = LocalDateTime.parse(endDate, formatter);
+        long days = Duration.between(start, end).toDays();
+        long hours = Duration.between(start, end).toHours() - (24 * days);
+        long min = Duration.between(start, end).toMinutes() - (24 * 60 * days) - (60 * hours);
+        return days + "day " + hours + "hour " + min + "min";
+    }
+
+    private String getTotalTimeInHourMin(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime start = LocalDateTime.parse(startDate, formatter);
+        LocalDateTime end = LocalDateTime.parse(endDate, formatter);
+        long hours = Duration.between(start, end).toHours();
+        long min = Duration.between(start, end).toMinutes() - (60 * hours);
+        return hours + "h " + min + "min";
+    }
+
+    private long getTotalDaysBetweenTwoDate(String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        return Duration.between(start.atStartOfDay(), end.atStartOfDay()).toDays();
+    }
+
+    private List<String> getListOfDatesBetweenTwoDateInString(String startDate, String endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+        List<String> dateList = new ArrayList<>();
+        while (!start.isAfter(end)) {
+            dateList.add(start.format(DateTimeFormatter.ofPattern("dd MMM yyyy")));
+            start = start.plusDays(1);
+        }
+        return dateList;
+    }
+
+    private List<LocalDate> getListOfDatesBetweenTwoDateInMillis(long startDate, long endDate) {
+        LocalDate start = Instant.ofEpochMilli(startDate).atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate end = Instant.ofEpochMilli(endDate).atZone(ZoneId.systemDefault()).toLocalDate();
+        List<LocalDate> dateList = new ArrayList<>();
+        while (!start.isAfter(end)) //end.isAfter(start) || end.equals(start)
+        {
+            dateList.add(start);
+            start = start.plusDays(1);
+        }
+        return dateList;
+    }
+
+    private List<LocalDate> getListOfDatesBetweenTwoDate(String startDate, String endDate) {
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+        List<LocalDate> dateList = new ArrayList<>();
+        while (!start.isAfter(end)) //end.isAfter(start) || end.equals(start)
+        {
+            dateList.add(start);
+            start = start.plusDays(1);
+        }
+        return dateList;
+    }
+
+    private void inputDateInMillis(long millis) {
         String TAG = "InMillis";
-        long millis = 1569494827;
 
         Instant instant = Instant.ofEpochMilli(millis);
         LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
@@ -71,10 +184,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void inputDateTimeOtherFormats() {
         String TAG = "OtherFormats";
-        String date1 = "2020-03-22 05:06:07.000 AM";//yyyy-MM-dd hh:mm:ss.SSS a
-        String date2 = "2020-03-22+05:30";//yyyy-MM-ddXXX
-        String date3 = "2020-03-22 AD";//yyyy-MM-dd G
-        String date4 = "2020-03-22";//yyyy-MM-dd
+        String date1 = "2021-03-22 05:06:07.000 AM";//yyyy-MM-dd hh:mm:ss.SSS a
+        String date2 = "2021-03-22+05:30";//yyyy-MM-ddXXX
+        String date3 = "2021-03-22 AD";//yyyy-MM-dd G
+        String date4 = "2021-03-22";//yyyy-MM-dd
         String date5 = "22 Mar, 2021";//dd EEE, yyyy
         String date6 = "05:06:07.089";//HH:mm:ss.SSS
         //Or many more possible here
@@ -85,10 +198,18 @@ public class MainActivity extends AppCompatActivity {
         //Directly convert to zone not possible if don't have any info of zone. So, first convert it into local and then to zone as per convertZoneToUTC()
         LocalDateTime ldt1 = LocalDateTime.parse(date1, formatter1);
 
-        String output1 = ldt1.format(DateTimeFormatter.ofPattern("EEE dd MMM yyyy"));//Sun 22 Mar 2020
-        String output2 = ldt1.format(DateTimeFormatter.ofPattern("D Q YYYY"));//DayOfYear-Quarter-WeekBasedYear -> 82 1 2020
+        String output1 = ldt1.format(DateTimeFormatter.ofPattern("E dd MMM yyyy"));//Sun 22 Mar 2021 //E or EEE both same
+        String output2 = ldt1.format(DateTimeFormatter.ofPattern("D Q YYYY"));//DayOfYear-Quarter-WeekBasedYear -> 81 1 2021
+        String output3 = ldt1.format(DateTimeFormatter.ofPattern("W w F e"));//Week of month-week of year-day of week-localize day of week -> 4 13 1 2 //Diff of F & e in notes
+        String output4 = ldt1.format(DateTimeFormatter.ofPattern("dd/MM/yy ppH"));//22/03/21  5 //p with two elements not allowed eg. dd/pMM/yy ppH not allowed
+        String output5 = ldt1.format(DateTimeFormatter.ofPattern("hh 'o''clock' a"));//05 o'clock AM
+        String output6 = ldt1.format(DateTimeFormatter.ofPattern("KK:mm a '-' kk:mm"));//
         Log.d(TAG, "\n" + date1 + "-->" + output1);
         Log.d(TAG, "\n" + date1 + "-->" + output2);
+        Log.d(TAG, "\n" + date1 + "-->" + output3);
+        Log.d(TAG, "\n" + date1 + "-->" + output4);
+        Log.d(TAG, "\n" + date1 + "-->" + output5);
+        Log.d(TAG, "\n" + date1 + "-->" + output6);
     }
 
     private void inputDateTimeWithFractionOrNot() {
@@ -148,18 +269,16 @@ public class MainActivity extends AppCompatActivity {
 
         //take any other output format or as much as want
         String output1 = ldt1.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss.SSS a"));//2020-03-22 05:06:07.000 AM
-        String output2 = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXX"));//2020-03-22T05:06:07+0530
+        String output2 = zdt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxx"));//2020-03-22T05:06:07+0530
         String output3 = zdt.format(DateTimeFormatter.ofPattern("dd MMMM yyyy z"));//22 March 2020 IST
         Log.d(TAG, "\n" + date1 + "-->" + output1);
         Log.d(TAG, "\n" + date1 + "-->" + output2);
         Log.d(TAG, "\n" + date1 + "-->" + output3);
     }
 
-    private void getSeparateFields() {
-        String input = "2021-05-27T16:05:15.598+05:30[Asia/Kolkata]";
-
+    private void getSeparateFields(String date) {
         //Also possible using local
-        ZonedDateTime zdt = ZonedDateTime.parse(input);
+        ZonedDateTime zdt = ZonedDateTime.parse(date);
 
         int year = zdt.getYear();
         Month month = zdt.getMonth();
@@ -185,20 +304,19 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Chronology: " + ch);
     }
 
-    private void convertLocalToString() {
-        LocalDateTime ldt = LocalDateTime.now();//2021-05-28T12:46:12.533
+    private void convertLocalToString(LocalDateTime ldt) {
+        // ldt format: 2021-05-28T12:46:12.533
         String dateInString = ldt.format(DateTimeFormatter.ofPattern("dd MMM, yyyy HH:mm:ss"));//28 May, 2021 12:46:12
         Log.d(TAG, "LocalToString: " + ldt + "-->" + dateInString);
     }
 
-    private void convertStringToLocalOrZone() {
-        String strDate = "27/05/2021 03:30 PM";
+    private void convertStringToLocalOrZone(String strDate) {
         LocalDateTime ldt = LocalDateTime.parse(strDate, DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a"));//2021-05-27T15:30
         Log.d(TAG, "StringToLocal: " + strDate + "-->" + ldt);
     }
 
-    private void convertZoneToUTC() {
-        ZonedDateTime zdt = ZonedDateTime.now();//2021-05-28T11:44:59.596+05:30[Asia/Kolkata]
+    private void convertZoneToUTC(ZonedDateTime zdt) {
+        //zdt format: 2021-05-28T11:44:59.596+05:30[Asia/Kolkata]
         LocalDateTime ldt = zdt.toLocalDateTime();//2021-05-28T07:16:12.527 //this and below both are same
         LocalDateTime ldt1 = LocalDateTime.ofInstant(zdt.toInstant(), ZoneOffset.systemDefault());//2021-05-28T07:16:12.527
         ZonedDateTime zdt1 = ldt.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC);//2021-05-28T07:16:12.527Z
@@ -207,9 +325,9 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "LocalToZone: " + ldt + "-->" + zdt1);
     }
 
-    private void convertUTCToZone() {
-        Instant instant = Instant.now(); //2021-05-28T07:16:12.526Z
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Kolkata"));//2021-05-28T12:46:12.526+05:30[Asia/Kolkata]
+    private void convertUTCToZone(Instant instant, ZoneId zoneId) {
+        // Instant format: 2021-05-28T07:16:12.526Z
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);//2021-05-28T12:46:12.526+05:30[Asia/Kolkata]
         Log.d(TAG, "UTCToZone: " + instant + "-->" + zdt);
     }
 
