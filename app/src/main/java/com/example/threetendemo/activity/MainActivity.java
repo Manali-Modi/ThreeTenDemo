@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.example.threetendemo.R;
-import com.example.threetendemo.databinding.ActivityMainBinding;
 
 import org.threeten.bp.Clock;
 import org.threeten.bp.DateTimeUtils;
@@ -31,34 +30,38 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.databinding.DataBindingUtil;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "DateTime";
-    private static final String TAG_LIST = "localDateList";
+    private static final String TAG_BASIC = "Basic";
+    private static final String TAG_CONVERSION = "DateTimeConversion";
+    private static final String TAG_LIST = "LocalDateList";
     private static final String TAG_DIFF = "Difference";
-    private ActivityMainBinding mainBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
+        //TAG_BASIC used
         basicClasses();
+
+        //TAG_CONVERSION used
         convertUTCToZone(Instant.now(), ZoneId.of("Asia/Kolkata"));
         convertZoneToUTC(ZonedDateTime.now()); //has internal conversion Zone->Local & Local->Zone
         convertStringToLocalOrZone("27/05/2021 03:30 PM");
         convertLocalToString(LocalDateTime.now());
         getSeparateFields("2021-05-27T16:05:15.598+05:30[Asia/Kolkata]");
+
+        //Each method has it's own tag
         inputDateWithZoneId();
         inputDateWithZoneOffset();
         inputDateTimeWithFractionOrNot();
         inputDateTimeOtherFormats(); //Not Standard
         inputDateInMillis(1569494827);
 
+        //TAG_LIST used
+        //Returns List of Date: may be tyoe of LocalDate or String or any other
         List<LocalDate> localDateList = getListOfDatesBetweenTwoDate("2021-04-22", "2021-05-05");
         Log.d(TAG_LIST, localDateList.toString());
 
@@ -68,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
         List<String> localDateList2 = getListOfDatesBetweenTwoDateInString("30/12/2020", "09/01/2021");
         Log.d(TAG_LIST, localDateList2.toString());
 
+        //TAG_DIFF used
+        //COunt durations between two days
         long daysBetween = getTotalDaysBetweenTwoDate("2021-01-01", "2021-02-01");
         Log.d(TAG_DIFF, String.valueOf(daysBetween));
 
@@ -132,6 +137,7 @@ public class MainActivity extends AppCompatActivity {
     private long getTotalDaysBetweenTwoDate(String startDate, String endDate) {
         LocalDate start = LocalDate.parse(startDate);
         LocalDate end = LocalDate.parse(endDate);
+        //No time defined here, so for count duration use method atStartOfDay()
         return Duration.between(start.atStartOfDay(), end.atStartOfDay()).toDays();
     }
 
@@ -159,7 +165,8 @@ public class MainActivity extends AppCompatActivity {
         return dateList;
     }
 
-    private List<LocalDate> getListOfDatesBetweenTwoDate(String startDate, String endDate) {
+    private List<LocalDate> getListOfDatesBetweenTwoDate(String startDate, String endDate) //args may be type of LocalDate
+    {
         LocalDate start = LocalDate.parse(startDate);
         LocalDate end = LocalDate.parse(endDate);
         List<LocalDate> dateList = new ArrayList<>();
@@ -291,28 +298,28 @@ public class MainActivity extends AppCompatActivity {
         ZoneId z = zdt.getZone();
         ZoneOffset zo = zdt.getOffset();
         Chronology ch = zdt.getChronology();
-        Log.d(TAG, "Year: " + year);
-        Log.d(TAG, "Month: " + month.toString());
-        Log.d(TAG, "Day: " + day);
-        Log.d(TAG, "Hour: " + hour);
-        Log.d(TAG, "Minutes: " + min);
-        Log.d(TAG, "Seconds: " + sec);
-        Log.d(TAG, "DayOfWeek: " + dow);
-        Log.d(TAG, "DayOfYear: " + doy);
-        Log.d(TAG, "ZoneId: " + z);
-        Log.d(TAG, "ZoneOffset: " + zo);
-        Log.d(TAG, "Chronology: " + ch);
+        Log.d(TAG_CONVERSION, "Year: " + year);
+        Log.d(TAG_CONVERSION, "Month: " + month.toString());
+        Log.d(TAG_CONVERSION, "Day: " + day);
+        Log.d(TAG_CONVERSION, "Hour: " + hour);
+        Log.d(TAG_CONVERSION, "Minutes: " + min);
+        Log.d(TAG_CONVERSION, "Seconds: " + sec);
+        Log.d(TAG_CONVERSION, "DayOfWeek: " + dow);
+        Log.d(TAG_CONVERSION, "DayOfYear: " + doy);
+        Log.d(TAG_CONVERSION, "ZoneId: " + z);
+        Log.d(TAG_CONVERSION, "ZoneOffset: " + zo);
+        Log.d(TAG_CONVERSION, "Chronology: " + ch);
     }
 
     private void convertLocalToString(LocalDateTime ldt) {
         // ldt format: 2021-05-28T12:46:12.533
         String dateInString = ldt.format(DateTimeFormatter.ofPattern("dd MMM, yyyy HH:mm:ss"));//28 May, 2021 12:46:12
-        Log.d(TAG, "LocalToString: " + ldt + "-->" + dateInString);
+        Log.d(TAG_CONVERSION, "LocalToString: " + ldt + "-->" + dateInString);
     }
 
     private void convertStringToLocalOrZone(String strDate) {
         LocalDateTime ldt = LocalDateTime.parse(strDate, DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a"));//2021-05-27T15:30
-        Log.d(TAG, "StringToLocal: " + strDate + "-->" + ldt);
+        Log.d(TAG_CONVERSION, "StringToLocal: " + strDate + "-->" + ldt);
     }
 
     private void convertZoneToUTC(ZonedDateTime zdt) {
@@ -320,101 +327,101 @@ public class MainActivity extends AppCompatActivity {
         LocalDateTime ldt = zdt.toLocalDateTime();//2021-05-28T07:16:12.527 //this and below both are same
         LocalDateTime ldt1 = LocalDateTime.ofInstant(zdt.toInstant(), ZoneOffset.systemDefault());//2021-05-28T07:16:12.527
         ZonedDateTime zdt1 = ldt.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC);//2021-05-28T07:16:12.527Z
-        Log.d(TAG, "ZoneToUTC: " + zdt + "-->" + zdt1);
-        Log.d(TAG, "ZoneToLocal: " + zdt + "-->" + ldt);
-        Log.d(TAG, "LocalToZone: " + ldt + "-->" + zdt1);
+        Log.d(TAG_CONVERSION, "ZoneToUTC: " + zdt + "-->" + zdt1);
+        Log.d(TAG_CONVERSION, "ZoneToLocal: " + zdt + "-->" + ldt);
+        Log.d(TAG_CONVERSION, "LocalToZone: " + ldt + "-->" + zdt1);
     }
 
     private void convertUTCToZone(Instant instant, ZoneId zoneId) {
         // Instant format: 2021-05-28T07:16:12.526Z
         ZonedDateTime zdt = ZonedDateTime.ofInstant(instant, zoneId);//2021-05-28T12:46:12.526+05:30[Asia/Kolkata]
-        Log.d(TAG, "UTCToZone: " + instant + "-->" + zdt);
+        Log.d(TAG_CONVERSION, "UTCToZone: " + instant + "-->" + zdt);
     }
 
     private void basicClasses() {
         Instant i1 = Instant.now(); //shows current utc time
-        mainBinding.txtDateTime.append("Instant 1 - " + i1);
+        Log.d(TAG_BASIC, "Instant 1 - " + i1);
 
         Clock c1 = Clock.system(ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nClock 1 - " + c1);
+        Log.d(TAG_BASIC, "Clock 1 - " + c1);
 
         Clock c2 = Clock.systemUTC(); //gives zone id of utc - represented as Z
-        mainBinding.txtDateTime.append("\nClock 2 - " + c2);
+        Log.d(TAG_BASIC, "Clock 2 - " + c2);
 
         Clock c3 = Clock.systemDefaultZone();
-        mainBinding.txtDateTime.append("\nClock 3 - " + c3);
+        Log.d(TAG_BASIC, "Clock 3 - " + c3);
 
         Clock c4 = Clock.fixed(Instant.now(), ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nClock 4 - " + c4);
+        Log.d(TAG_BASIC, "Clock 4 - " + c4);
 
         Clock c5 = Clock.offset(Clock.system(ZoneId.of("Europe/Paris")), Duration.ofSeconds(2));
-        mainBinding.txtDateTime.append("\nClock 5 - " + c5);
+        Log.d(TAG_BASIC, "Clock 5 - " + c5);
 
         Instant start = Instant.now();
         Instant end1 = Instant.now().plusSeconds(5);
         Instant end2 = Instant.now().minusSeconds(5);
 
         Duration d1 = Duration.between(start, end1);
-        mainBinding.txtDateTime.append("\nDuration 1 - " + d1);
+        Log.d(TAG_BASIC, "Duration 1 - " + d1);
 
         Duration d2 = Duration.between(start, end2);
-        mainBinding.txtDateTime.append("\nDuration 2 - " + d2);
+        Log.d(TAG_BASIC, "Duration 2 - " + d2);
 
         ZonedDateTime zdt1 = ZonedDateTime.now();
-        mainBinding.txtDateTime.append("\nZonedDateTime 1 - " + zdt1);
+        Log.d(TAG_BASIC, "ZonedDateTime 1 - " + zdt1);
 
         ZonedDateTime zdt2 = ZonedDateTime.now(c3);
-        mainBinding.txtDateTime.append("\nZonedDateTime 2 - " + zdt2);
+        Log.d(TAG_BASIC, "ZonedDateTime 2- " + zdt2);
 
         ZonedDateTime zdt3 = ZonedDateTime.now(ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nZonedDateTime 3 - " + zdt3);
+        Log.d(TAG_BASIC, "ZonedDateTime 3 - " + zdt3);
 
         LocalDate ld1 = LocalDate.now();
-        mainBinding.txtDateTime.append("\nLocalDate 1 - " + ld1);
+        Log.d(TAG_BASIC, "LocalDate 1 - " + ld1);
 
         LocalDate ld2 = LocalDate.now(c3);
-        mainBinding.txtDateTime.append("\nLocalDate 2 - " + ld2);
+        Log.d(TAG_BASIC, "LocalDate 2 - " + ld2);
 
         LocalDate ld3 = LocalDate.now(ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nLocalDate 3 - " + ld3);
+        Log.d(TAG_BASIC, "LocalDate 3 - " + ld3);
 
         LocalTime lt1 = LocalTime.now();
-        mainBinding.txtDateTime.append("\nLocalTime 1 - " + lt1);
+        Log.d(TAG_BASIC, "LocalTime 1 - " + lt1);
 
         LocalTime lt2 = LocalTime.now(c3);
-        mainBinding.txtDateTime.append("\nLocalTime 2 - " + lt2);
+        Log.d(TAG_BASIC, "LocalTime 2 - " + lt2);
 
         LocalTime lt3 = LocalTime.now(ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nLocalTime 3 - " + lt3);
+        Log.d(TAG_BASIC, "LocalTime 3 - " + lt3);
 
         LocalDateTime ldt1 = LocalDateTime.now();
-        mainBinding.txtDateTime.append("\nLocalDateTime 1 - " + ldt1);
+        Log.d(TAG_BASIC, "LocalDateTime 1 - " + ldt1);
 
         LocalDateTime ldt2 = LocalDateTime.now(c3);
-        mainBinding.txtDateTime.append("\nLocalDateTime 2 - " + ldt2);
+        Log.d(TAG_BASIC, "LocalDateTime 2 - " + ldt2);
 
         LocalDateTime ldt3 = LocalDateTime.now(ZoneId.of("Europe/Paris"));
-        mainBinding.txtDateTime.append("\nLocalDateTime 3 - " + ldt3);
+        Log.d(TAG_BASIC, "LocalDateTime 3 - " + ldt3);
 
         MonthDay md = MonthDay.now();
-        mainBinding.txtDateTime.append("\nMonthDay - " + md);
+        Log.d(TAG_BASIC, "MonthDay - " + md);
 
         YearMonth ym = YearMonth.now();
-        mainBinding.txtDateTime.append("\nYearMonth - " + ym);
+        Log.d(TAG_BASIC, "YearMonth - " + ym);
 
         Year y = Year.now();
-        mainBinding.txtDateTime.append("\nYear - " + y);
+        Log.d(TAG_BASIC, "Year - " + y);
 
         Period p = Period.of(2021, 4, 5);
-        mainBinding.txtDateTime.append("\nPeriod - " + p);
+        Log.d(TAG_BASIC, "Period - " + p);
 
         Date date = DateTimeUtils.toDate(Instant.now());
-        mainBinding.txtDateTime.append("\nInstant -> Date: " + date);
+        Log.d(TAG_BASIC, "Instant -> Date: " + date);
 
         Instant i2 = DateTimeUtils.toInstant(date);
-        mainBinding.txtDateTime.append("\nDate -> Instant 2: " + i2);
+        Log.d(TAG_BASIC, "Date -> Instant 2: " + i2);
 
         GregorianCalendar gc = DateTimeUtils.toGregorianCalendar(ZonedDateTime.now());
-        mainBinding.txtDateTime.append("\nZonedDateTime -> GregorianCalendar: " + gc);
+        Log.d(TAG_BASIC, "ZonedDateTime -> GregorianCalendar: " + gc);
     }
 }
